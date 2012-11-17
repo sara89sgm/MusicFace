@@ -13,7 +13,7 @@
        
         <script type="text/javascript" src="js/ui.selectmenu.js"></script>
         <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
-
+<script type="text/javascript" src="js/infoSongs.js"></script>
     <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
 
 
@@ -96,7 +96,7 @@ var setAutoComplete = function(parsed_items) {
       };
 
      function setPicture(data){
-      console.log(data.picture.url);
+
       $("#imgSelected").attr("src",data.picture.data.url);
      }
 
@@ -105,9 +105,27 @@ var setAutoComplete = function(parsed_items) {
       console.log(idUser);
       FB.api('/'+idUser+'/music.listens', function(fbresponse) {
 
-          console.log(fbresponse);
+          getComparison(fbresponse.data);
         });
 
+     }
+
+     function getComparison(data){
+      var songsUser=[];
+      var i=0;
+        for(i;i<data.length;i++){
+          var song=data[i];
+            url=song.data.song.url;
+            urlParam=url.split("/");
+            idSong=urlParam[urlParam.length-1];
+            console.log(idSong);
+          songSend={app :song.application.name,
+                      id : idSong};
+          songsUser.push(songSend);
+        }
+        console.log("COMPARISON");
+        console.log(songsUser);
+        getEchoNestIDs(songsUser);
      }
 
       // Load the SDK's source Asynchronously
