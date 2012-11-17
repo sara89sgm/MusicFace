@@ -1,0 +1,135 @@
+    <!DOCTYPE html>
+    <html>
+        <head>
+
+            <style>
+
+            </style>
+
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <link rel="Stylesheet" href="jquery-ui/css/dark-hive/jquery-ui-1.8.23.custom.css" type="text/css" />
+        <link rel="Stylesheet" href="css/ui.selectmenu.css" type="text/css" />
+        <link rel="Stylesheet" href="css/styles.css" type="text/css" />
+       
+        <script type="text/javascript" src="js/ui.selectmenu.js"></script>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
+
+    <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+
+
+        </head>
+        <body>
+
+    <div id="fb-root"></div>
+    <script>
+    var accessTokenFB="";
+      window.fbAsyncInit = function() {
+        // init the FB JS SDK
+        FB.init({
+          appId      : '138288166319808', // App ID from the App Dashboard
+          channelUrl : 'channel.html', // Channel File for x-domain communication
+          status     : true, // check the login status upon init?
+          cookie     : true, // set sessions cookies to allow your server to access the session?
+          xfbml      : true  // parse XFBML tags on this page?
+        });
+
+var makeItems = function(fbresponse) {
+  return $.map(fbresponse, function(item) {
+
+    return {
+      
+      label: item.name,
+      value: item.id,
+      picture: item.picture
+    }
+  });
+};
+
+var setAutoComplete = function(parsed_items) {
+ 
+  $("#selector").autocomplete({
+    source : parsed_items,
+    select : function(event, ui){
+      $("#selector").val(ui.item.label);
+      $("#selectorID").val(ui.item.value);
+
+       FB.api('/'+ui.item.value+'?fields=picture', function(fbresponse) {
+
+          setPicture(fbresponse);
+        });
+      return false;
+    }
+  }).data("autocomplete")._renderItem = function(ul, item) {
+    return $("<li>")
+      .data("item.autocomplete", item)
+      .append( "<a>"+ item.label + "</a>")
+      .appendTo(ul); 
+  };
+};
+        // Additional initialization code such as adding Event Listeners goes here
+        FB.Event.subscribe('auth.statusChange', function(response) {
+          switch(response.status) {
+            case 'unknown':
+              // Fall through
+            case 'not_authorized':
+              console.debug('Must login!');
+              break;
+            case 'connected':
+              var uid = response.authResponse.userID;
+              var signedRequest = response.authResponse.signedRequest;
+              console.debug('woop! Welcome user #'+uid);
+
+              FB.api('me?fields=id,name,picture.type(square)', function(r) {
+                $("#imgMe").attr("src",r.picture.data.url);
+              });
+              FB.api('/me/friends', function(fbresponse) {
+  setAutoComplete(makeItems(fbresponse.data));
+});
+              break;
+              default:
+                console.log("Unexpected response from Facebook auth: `" + response.status + "` not recognised!")
+          }
+          
+         
+
+        });
+      };
+
+     function setPicture(data){
+      console.log(data.picture.url);
+      $("#imgSelected").attr("src",data.picture.data.url);
+     }
+
+     function lookProfile(){
+      var idUser=$("#selectorID").val();
+      console.log(idUser);
+      FB.api('/'+idUser+'/music.listens', function(fbresponse) {
+
+          console.log(fbresponse);
+        });
+
+     }
+
+      // Load the SDK's source Asynchronously
+      (function(d, debug){
+         var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement('script'); js.id = id; js.async = true;
+         js.src = "//connect.facebook.net/en_US/all" + (debug ? "/debug" : "") + ".js";
+         ref.parentNode.insertBefore(js, ref);
+       }(document, /*debug*/ true));
+
+    </script>
+
+<div>
+    <input type="text" id="selector"/>
+    <input id="selectorID" type="text"/>
+  </div>
+    <div id="selected" > <img id="imgSelected" src=""/></div>
+
+      <div id="me" > <img id="imgMe" src=""/></div>
+
+      <button onclick="lookProfile()"> Start </button>
+
+        </body>
+    </html>
