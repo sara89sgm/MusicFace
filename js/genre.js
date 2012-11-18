@@ -1,54 +1,30 @@
-var genres; //array[] of the first 5 genres for every artist
+var genresMe; //array[] of the first 5 genres for every artist
+var genresFriend;
 
-//require venueID
-//returns nothing because calculateTopGenre() does
-function getTopGenreForSpecificVenue(venueID) {
-	
-	genres=null;
-	genres=new Array();
-	//empty genres...? or not? what is the scope and durability of the global variable genres?
-	alert("calculando"+venueID);
-	getArtistsForSpecificVenue(venueID);	
-}
 
 //require venueID
 //returns nothing but will call calculateTopGenre() when it's finished (if the first AJAX call to Parse is not an error).
-function getArtistsForSpecificVenue(venueID) {
-	
-	//do some magic with the database and get the list of artists played in a specific venue
-	var venuesTracks = Parse.Object.extend("VenuesTracksTest");
-	var query = new Parse.Query(venuesTracks);
-	query.equalTo("venueID", venueID); //add to the query "only the last 20 songs"
-	
-	query.find({
-  		success: function(results) {
-    		//alert("Successfully retrieved " + results.length + " scores.");
-    		
-    		//for every artist
-    		var i = 0;
-    		var j = 0; //to know when all the fillGenresArray() calls are finished
-    		while(i<results.length) {
-    			
-    			var currentArtist = results[i].get("artistID"); //MAGIC
-    			//console.log( currentArtist );
-    			
+function getArtistsGenre(idArtist, userId) {
+
+    			//console.log(userId);
     			//get the artist's genres
-    			var url="http://developer.echonest.com/api/v4/artist/terms?api_key=MXG5OCMN63QJ1C5OM&id=spotify-WW:artist:"+currentArtist+"&format=jsonp";
+    			var url="http://developer.echonest.com/api/v4/artist/terms?api_key=MXG5OCMN63QJ1C5OM&id="+idArtist+"&format=jsonp";
 				url=encodeURI(url);
-				
+
 				$.ajax({
 					url: url,
 					dataType: "jsonp",
 					success: function(data, textStatus, jqXHR){
     					//add the artist's genres to the global genre array
- 						fillGenresArray(data);
+ 						fillGenresArray(data, userId);
  						
  						//j gets incremented only when the ajax calls are finished
- 						j++;
+                        genreFinished++;
  						
  						//when the artists are finished calculate the top genre above all
- 						if (j==(results.length)) {
-    						calculateTopGenre(venueID,results[i].get("venueName"));
+ 						if (genreFinished==(validSongs)) {
+                             console.log("calculate Top Genre for"+userId);
+    						calculateTopGenre(userId);
     					}
 
 					},
@@ -57,37 +33,33 @@ function getArtistsForSpecificVenue(venueID) {
 					}
 				});
 					
-    			i++;
-    		}
-    		
-  		},
-  		error: function(error) {
-    		alert("Error: " + error.code + " " + error.message);
-  		}
-	});
 
 }
 
 
-function fillGenresArray(data) {
+function fillGenresArray(data, userId) {
 	
-	//console.log("---fillGenresArray called!");
+	//console.log(userId);
 	
 	var terms=data.response.terms;
 	//console.log("terms length: "+terms.length);
 	
 	var i=0;
 	while (i<5 && i<terms.length) {
-		genres.push(terms[i].name);
+        if(userId=meId){
+		genresMe.push(terms[i].name);
+        }else{
+            genresFriend.push(terms[i].name);
+        }
 		i++;
 	}
 	
 }
 
-//uses global genres array
-//stores the most common genre accross all the artists in a specific venue in the VenuesGenre table
-function calculateTopGenre(venueID,venueName) {
-    alert("calcular top"+venueID);
+
+function calculateTopGenre(userId) {
+    var idUser=userId;
+    //console.log("Calculating:"+idUser);
 	var availableGenres = new Array();
 	
 	availableGenres["pop"]=0;
@@ -103,6 +75,15 @@ function calculateTopGenre(venueID,venueName) {
 
 	String.prototype.contains = function(it) { return this.indexOf(it) != -1; }; //hacky.
 	var i=0;
+    var genres=null
+var resultsTab=null;
+    if(idUser==meId){
+        resultsTab=$("#style");
+        genres=genresMe;
+    }else{
+        resultsTab=$("#styleFriend");
+        genres=genresFriend;
+    }
 	//for all the genres in the big array
 	while (i<genres.length) {
 			
@@ -141,31 +122,14 @@ function calculateTopGenre(venueID,venueName) {
 			
 	}
 	var genre = maxkey;
-
-	console.log("and the most popular genre for venue " + venueID + " iiis:" + genre);
+resultsTab.empty();
+    resultsTab.append("<p>Your style is: "+genre+"</p>")
+	console.log("and the most popular genre for " + idUser + " is:" + genre);
 		
 	//put it into VenuesGenre table (venueID, genre, time)
-	var time = new Date().getTime();
+	//var time = new Date().getTime();
 	
-	var VenuesGenre = Parse.Object.extend("VenuesGenre");
-	var venuesGenre = new VenuesGenre();
 
-	venuesGenre.set("venueID", venueID);
-    venuesGenre.set("venueName", venueName);
-	venuesGenre.set("genre", genre);
-	venuesGenre.set("time", time);
-
-	venuesGenre.save(null, {
-  		success: function(venuesGenre) {
-                     alert("Calculado"+genre);
-  		},
-  		error: function(venuesGenre, error) {
-    		console.log("save to VenuesGenre failed :(!");
-  		}
-	});
 }
 
-function testGenreForVenue() {
-	getTopGenreForSpecificVenue("3fd66200f964a520daf11ee3");
-	
-}
+

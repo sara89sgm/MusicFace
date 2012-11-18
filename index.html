@@ -1,93 +1,149 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        
-        <style>
-            @import url('sp://import/css/eve.css');
-            @import url('sp://import/css/player.css');
-            @import url('sp://import/css/list.css');
-            @import url('sp://tutorial/css/main.css');
-            @import url('sp://tutorial/css/github.css');
-            #map_object {border:1px solid #333;margin:0;padding:0;}
-            </style>
-        
-        <script type="text/javascript" src="sp://wimm/js/jquery.min.js"></script>
-        <link rel="Stylesheet" href="sp://wimm/jquery-ui/css/dark-hive/jquery-ui-1.8.23.custom.css" type="text/css" />
-        <link rel="Stylesheet" href="sp://wimm/css/ui.selectmenu.css" type="text/css" />
-        <link rel="Stylesheet" href="sp://wimm/css/styles.css" type="text/css" />
-        <script type="text/javascript" src="sp://wimm/jquery-ui/js/jquery-ui-1.8.23.custom.min.js"></script>
-        <script type="text/javascript" src="sp://wimm/js/ui.selectmenu.js"></script>
-        <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-        
-        <script type="text/javascript" src="space.js"></script>
-        <script type="text/javascript" src="js/genre.js"></script>
-        <script>
-            /* Instantiate the global sp object; include models & views */
-            var sp = getSpotifyApi(1);
-            var models = sp.require("sp://import/scripts/api/models");
-            var views = sp.require("sp://import/scripts/api/views");
-            var auth = sp.require('sp://import/scripts/api/auth');
-            
-            ECHONEST_API_KEY = "3XTBY4BG7RBHOR18L";
-            var SONGS = new Array();
-            var BREAK_COUNT = 0;
-            var COUNT = 0;
-            
-            
-            function tabs() {
-                var args = models.application.arguments;
-                var current = document.getElementById(args[0]);
-                var sections = document.getElementsByClassName('section');
-                for (i=0;i<sections.length;i++){
-                    sections[i].style.display = 'none';
-                }
-                current.style.display = 'block';
-            }
-            
-            
-            //Initialize Facebook
-            var accessTokenFB='';
-            
-            
-            
-            function createPlaylist(){
-                var tempPlaylist = new models.Playlist();
-                console.log(SONGS.length);
-                for (i=0; i<SONGS.length; i++){
-                    var track = models.Track.fromURI('spotify:track:'+SONGS[i]);
-                    /* Create a temporary playlist for the song */
-                    tempPlaylist.add(track);
-                }
-                
-                /* Create a "view" for the playlist and pass the list
-                 * code to the #player <div /> */
-                var playlist = new views.List(tempPlaylist);
-                $("#player").html("");
-                var playerHTML = document.getElementById('player');
-                
-                playerHTML.appendChild(playlist.node);
-                
-            }
-            
-            
-            function getSongSpotifyUri(song_echonest_id){
-                var echonest_url = "http://developer.echonest.com/api/v4/song/profile?api_key="+ECHONEST_API_KEY+"&id="+song_echonest_id+"&bucket=id:spotify-WW&bucket=tracks"+"&format=jsonp&callback=?";
-                var spotify_uri = null;
-                //console.log(echonest_url);
-                $.ajax({url: encodeURI(echonest_url),
-                       dataType: 'jsonp',
-                       //async: false,
-                       success: function(data) {
-                       BREAK_COUNT -= 1;
-                       if (data.response.status.message == "Success"){
-                       if (data.response.songs[0].tracks.length > 0){
-                       song_spotify_uri = data.response.songs[0].tracks[0].foreign_id;
-                       prefix = "spotify-WW:track:";
-                       song_spotify_uri = song_spotify_uri.substring(prefix.length);
-                       spotify_uri = song_spotify_uri;
-                       SONGS.push(spotify_uri);
-                       }/*else{
-                         console.log("NO_SONG_SPOTIFY_ID: " + BREAK_COUNT);
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MusicFace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+
+            /* Custom container */
+        .container-narrow {
+            margin: 0 auto;
+            max-width: 700px;
+        }
+
+        .container-narrow > hr {
+            margin: 30px 0;
+        }
+
+            /* Main marketing message and sign up button */
+        .jumbotron {
+            margin: 60px 0;
+            text-align: center;
+        }
+
+        .jumbotron h1 {
+            font-size: 72px;
+            line-height: 1;
+        }
+
+        .jumbotron .btn {
+            font-size: 21px;
+            padding: 14px 24px;
+        }
+
+            /* Supporting marketing content */
+        .marketing {
+            margin: 60px 0;
+        }
+
+        .marketing p + h4 {
+            margin-top: 28px;
+        }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css"/>
+    <link rel="stylesheet" href="css/styles.css"/>
+    <script src="js/jquery.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+    <script src="http://cdn-files.deezer.com/js/min/dz.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/infoSongs.js"></script>
+    <script type="text/javascript" src="js/genre.js"></script>
+
+
+
+</head>
+
+<body>
+<div id="dz-root"></div>
+<div class="container-narrow">
+
+    <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+        <h3 class="muted">MusicFace</h3>
+    </div>
+
+    <hr>
+
+    <div class="jumbotron">
+        <h1>MusicFace</h1>
+
+        <p class="lead">Your music is your life?!Compare your style of music with your friends.</p>
+
+    </div>
+
+    <hr>
+
+    <div class="row-fluid marketing centerIcon">
+        <div class="span12 centerIcon" id="buttonDiv">
+            <a class="btn btn-large btn-success " onclick="lookProfile()" id="buttonSelect" href="#">Search a
+                friend!</a>
+        </div>
+
+        <div class="span12 centerIcon">
+
+            <div class="span6">
+                <div id="me"><img id="imgMe" src="" height="200px"/></div>
+                <div id="meName"></div>
+                <div id="resultsMe">
+                    <p id="resultsMeData"></p>
+                    <p id="style"> </p>
+                </div>
+            </div>
+
+            <div class="span6">
+                <div id="selected"><img id="imgSelected" src="" height="200px"/></div>
+                <p> Look for any of your FB friends: </p>
+                <input type="text" id="selector"/>
+                <div id="resultsFriend">
+                    <p id="resultsFriendData"></p>
+                    <p id="styleFriend"> </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div class="footer">
+        <p></p>
+    </div>
+
+</div>
+<!-- /container -->
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+
+<script src="js/bootstrap.js"></script>
+
+
+</body>
+</html>
+      console.log("NO_SONG_SPOTIFY_ID: " + BREAK_COUNT);
                          }*/
                        
                        console.log("BREAK_COUNT: "+BREAK_COUNT);

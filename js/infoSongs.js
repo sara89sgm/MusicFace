@@ -1,12 +1,29 @@
 var infoUserOne; //array[] of the first 5 genres for every artist
 var callsFinished=0;
 var validSongs=0;
+var summaryUserSelected = [];
+var summaryMe=[];
+var genreFinished=0;
 
 
 
 //require userSongs
 //returns nothing but will call calculateTopGenre() when it's finished (if the first AJAX call to Parse is not an error).
-function getEchoNestIDs(userSongs) {
+function getEchoNestIDs(userSongs, idUser) {
+    genreFinished=0;
+    if(idUser==meId){
+        summaryMe[0]=0;
+        summaryMe[1]=0;
+        summaryMe[2]=0;
+        summaryMe[3]=0;
+        genresMe=new Array();
+    }else{
+        summaryUserSelected[0]=0;
+        summaryUserSelected[1]=0;
+        summaryUserSelected[2]=0;
+        summaryUserSelected[3]=0;
+        genresFriend=new Array();
+    }
 	console.log("Looking for echonest");
 	validSongs=0;
 	callsFinished=0;
@@ -20,10 +37,10 @@ function getEchoNestIDs(userSongs) {
 				var app="";
     			if(userSong.app=="Spotify"){
     				app="spotify-WW";
-    				validSongs++;
+
     			}else if(userSong.app=="Deezer"){
     				app="deezer";
-    				validSongs++;
+
     			}else{
     				continue;
     			}
@@ -35,10 +52,10 @@ function getEchoNestIDs(userSongs) {
 					url: url,
 					dataType: "jsonp",
 					success: function(data, textStatus, jqXHR){
-						console.log(data.response);
+						//console.log(data.response);
     					//add the artist's genres to the global genre array
- 						getAudioSummary(data.response.track.song_id);
- 						
+ 						getAudioSummary(data.response.track.song_id, idUser);
+                        validSongs++;
  						//j gets incremented only when the ajax calls are finished
  						
 
@@ -54,7 +71,7 @@ function getEchoNestIDs(userSongs) {
 
 
 
-function getAudioSummary(id){
+function getAudioSummary(id, idUser){
 
 
 var url="http://developer.echonest.com/api/v4/song/profile?api_key=FILDTEOIK2HBORODV&format=jsonp&id="+id+"&bucket=audio_summary";
@@ -65,14 +82,14 @@ var url="http://developer.echonest.com/api/v4/song/profile?api_key=FILDTEOIK2HBO
 					dataType: "jsonp",
 					success: function(data, textStatus, jqXHR){
     					//add the artist's genres to the global genre array
- 						storeAudioSummary(data);
+ 						storeAudioSummary(data, idUser);
  						
  						//j gets incremented only when the ajax calls are finished
  						callsFinished++;
  						
  						//when the artists are finished calculate the top genre above all
  						if (callsFinished==(validSongs)) {
-    						calculateAverageOfTypes();
+    						calculateAverageOfTypes(idUser);
     					}
 
 					},
@@ -82,8 +99,52 @@ var url="http://developer.echonest.com/api/v4/song/profile?api_key=FILDTEOIK2HBO
 				});
 }
 
-function storeAudioSummary(data){
-	console.log("AUDIO_SUMMARY");
-    console.log(data);
+function storeAudioSummary(data, idUser){
+	if(idUser==meId){
+        //console.log(data);
+        if(typeof(data.response.songs[0].audio_summary)!="undefined"){
+
+            summaryMe[0]=summaryMe[0]+data.response.songs[0].audio_summary.danceability;
+            summaryMe[1]+=data.response.songs[0].audio_summary.energy;
+            summaryMe[2]+=data.response.songs[0].audio_summary.tempo;
+            summaryMe[3]+=1;
+            getArtistsGenre(data.response.songs[0].artist_id, meId);
+        }
+    }else{
+        if(typeof(data.response.songs[0].audio_summary)!="undefined"){
+            summaryUserSelected[0]+=data.response.songs[0].audio_summary.danceability;
+            summaryUserSelected[1]+=data.response.songs[0].audio_summary.energy;
+            summaryUserSelected[2]+=data.response.songs[0].audio_summary.tempo;
+            summaryUserSelected[3]+=1;
+            getArtistsGenre(data.response.songs[0].artist_id, userIdSelected);
+        }
+    }
+}
+
+function calculateAverageOfTypes(idUser){
+    if(idUser==meId){
+
+        console.log("printing results");
+        $("#resultsMeData").append("<ul>");
+        danceability=summaryMe[0]/summaryMe[3];
+        $("#resultsMeData").append("<li>Danceability: "+danceability+"</li>");
+
+        energy=summaryMe[1]/summaryMe[3];
+        $("#resultsMeData").append("<li>Energy: "+energy+"</li>");
+
+        tempo=summaryMe[2]/summaryMe[3];
+        $("#resultsMeData").append("<li>Tempo: "+tempo+"</li>");
+        $("#resultsMeData").append("</ul>");
+
+    }else{
+        $("#resultsFriendData").append("<ul>");
+        danceability=summaryUserSelected[0]/summaryUserSelected[3];
+        $("#resultsFriendData").append("<li>Danceability: "+danceability+"</li>");
+        energy=summaryUserSelected[1]/summaryUserSelected[3];
+        $("#resultsFriendData").append("<li>Energy: "+energy+"</li>");
+        tempo=summaryUserSelected[2]/summaryUserSelected[3];
+        $("#resultsFriendData").append("<li>Tempo: "+tempo+"</li>");
+        $("#resultsFriendData").append("</ul>");
+    }
 }
 
