@@ -1,12 +1,13 @@
 var userIdSelected;
+var nameSelected;
 var meId;
 var songsMe=[];
-var songsFriend;
+var songsFriend=[];
 window.fbAsyncInit = function () {
     // init the FB JS SDK
     FB.init({
         appId:'138288166319808', // App ID from the App Dashboard
-        channelUrl:'channel.html', // Channel File for x-domain communication
+        channelUrl:'http://local.com/~saragozalo/MusicFace/channelFB.html', // Channel File for x-domain communication
         status:true, // check the login status upon init?
         cookie:true, // set sessions cookies to allow your server to access the session?
         xfbml:true  // parse XFBML tags on this page?
@@ -14,8 +15,15 @@ window.fbAsyncInit = function () {
 
     DZ.init({
         appId  : '108761',
-        channelUrl : 'channel.html'
+        channelUrl : 'http://local.com/~saragozalo/MusicFace/channel.html',
+
     });
+
+    DZ.ready(function(){
+        DZ.canvas.setSize(3000);
+    });
+
+$("#buttonCreateDiv").hide();
 
     var makeItems = function (fbresponse) {
         return $.map(fbresponse, function (item) {
@@ -38,7 +46,7 @@ window.fbAsyncInit = function () {
                 userIdSelected=ui.item.value;
                 $("#buttonSelect").text("Compare!");
                 //$("#selectorID").val(ui.item.value);
-
+                nameSelected=ui.item.label;
                 FB.api('/' + ui.item.value + '?fields=picture.type(large)', function (fbresponse) {
 
                     setPicture(fbresponse);

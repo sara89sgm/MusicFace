@@ -123,7 +123,7 @@ var resultsTab=null;
 	}
 	var genre = maxkey;
 resultsTab.empty();
-    resultsTab.append("<p>Your style is: "+genre+"</p>")
+    resultsTab.append("<h4>Your style is: "+genre+"</h4>")
 	console.log("and the most popular genre for " + idUser + " is:" + genre);
 		
 	//put it into VenuesGenre table (venueID, genre, time)

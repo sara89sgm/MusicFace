@@ -4,6 +4,8 @@ var validSongs=0;
 var summaryUserSelected = [];
 var summaryMe=[];
 var genreFinished=0;
+var songsMe=[];
+var songsFriend=[];
 
 
 
@@ -24,7 +26,7 @@ function getEchoNestIDs(userSongs, idUser) {
         summaryUserSelected[3]=0;
         genresFriend=new Array();
     }
-	console.log("Looking for echonest");
+	//console.log("Looking for echonest");
 	validSongs=0;
 	callsFinished=0;
 
@@ -109,6 +111,7 @@ function storeAudioSummary(data, idUser){
             summaryMe[2]+=data.response.songs[0].audio_summary.tempo;
             summaryMe[3]+=1;
             getArtistsGenre(data.response.songs[0].artist_id, meId);
+            songsMe.push(""+data.response.songs[0].artist_name+" "+data.response.songs[0].title);
         }
     }else{
         if(typeof(data.response.songs[0].audio_summary)!="undefined"){
@@ -116,6 +119,7 @@ function storeAudioSummary(data, idUser){
             summaryUserSelected[1]+=data.response.songs[0].audio_summary.energy;
             summaryUserSelected[2]+=data.response.songs[0].audio_summary.tempo;
             summaryUserSelected[3]+=1;
+            songsFriend.push(""+data.response.songs[0].artist_name+" "+data.response.songs[0].title);
             getArtistsGenre(data.response.songs[0].artist_id, userIdSelected);
         }
     }
@@ -124,7 +128,7 @@ function storeAudioSummary(data, idUser){
 function calculateAverageOfTypes(idUser){
     if(idUser==meId){
 
-        console.log("printing results");
+        //console.log("printing results");
         $("#resultsMeData").append("<ul>");
         danceability=summaryMe[0]/summaryMe[3];
         $("#resultsMeData").append("<li>Danceability: "+danceability+"</li>");
@@ -145,6 +149,7 @@ function calculateAverageOfTypes(idUser){
         tempo=summaryUserSelected[2]/summaryUserSelected[3];
         $("#resultsFriendData").append("<li>Tempo: "+tempo+"</li>");
         $("#resultsFriendData").append("</ul>");
+        $("#buttonCreateDiv").show();
     }
 }
 
